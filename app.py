@@ -35,7 +35,7 @@ def admin_poll(poll_id):
         else:
             return jsonify(success=False, message="Invalid input"), 400
     
-    if request.headers.get('Content-Type') == 'application/json':
+    if request.headers.get('Content-Type') == 'application/json' or request.headers.get('Accept') == 'application/json':
         return jsonify(polls[poll_id])
     return render_template('admin_poll.html')
 
@@ -55,7 +55,7 @@ def user_poll(poll_id):
         else:
             return jsonify(success=False, message="Invalid date or time"), 400
     
-    if request.headers.get('Content-Type') == 'application/json':
+    if request.headers.get('Content-Type') == 'application/json' or request.headers.get('Accept') == 'application/json':
         return jsonify(polls[poll_id])
     return render_template('user_poll.html')
 

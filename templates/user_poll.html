@@ -94,7 +94,7 @@
                 return;
             }
             
-            // Create table header with dates and times
+            // Create table header with times
             const allTimes = new Set();
             dates.forEach(date => {
                 Object.keys(pollData.dates[date]).forEach(time => {
@@ -103,6 +103,14 @@
             });
             
             const sortedTimes = Array.from(allTimes).sort();
+            
+            // Create table header
+            let tableHeader = '<tr><th>Date</th>';
+            sortedTimes.forEach(time => {
+                const formattedTime = new Date(`2000-01-01T${time}`).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                tableHeader += `<th>${formattedTime}</th>`;
+            });
+            tableHeader += '</tr>';
             
             // Create table rows
             let tableRows = '';
@@ -135,14 +143,6 @@
                 
                 tableRows += '</tr>';
             });
-            
-            // Create table header
-            let tableHeader = '<tr><th>Date</th>';
-            sortedTimes.forEach(time => {
-                const formattedTime = new Date(`2000-01-01T${time}`).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-                tableHeader += `<th>${formattedTime}</th>`;
-            });
-            tableHeader += '</tr>';
             
             pollTable.innerHTML = `<table>${tableHeader}${tableRows}</table>`;
         }
