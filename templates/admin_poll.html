@@ -5,52 +5,201 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Poll - Doodle Clone</title>
     <style>
+        :root {
+            --primary-color: #4285f4;
+            --primary-dark: #3367d6;
+            --success-color: #34a853;
+            --warning-color: #fbbc05;
+            --danger-color: #ea4335;
+            --light-gray: #f5f5f5;
+            --dark-gray: #333;
+            --medium-gray: #757575;
+            --border-color: #e0e0e0;
+        }
+        
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            background-color: var(--light-gray);
+            color: var(--dark-gray);
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
         }
+        
         .container {
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
+            max-width: 900px;
+            margin: 40px auto;
+            padding: 30px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
         }
-        input, button, select {
-            margin: 5px 0;
-            padding: 10px;
+        
+        h1, h2 {
+            color: var(--dark-gray);
+            margin-top: 0;
         }
+        
+        h1 {
+            font-size: 28px;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        h2 {
+            font-size: 22px;
+            margin-top: 30px;
+            margin-bottom: 15px;
+        }
+        
+        .share-link {
+            background-color: var(--light-gray);
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .share-link span {
+            word-break: break-all;
+            flex-grow: 1;
+            margin-right: 10px;
+        }
+        
+        .copy-btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 8px 12px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .copy-btn:hover {
+            background-color: var(--primary-dark);
+        }
+        
+        .time-slot-form {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px;
+            align-items: center;
+        }
+        
+        input[type="date"], input[type="time"] {
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-size: 16px;
+            flex-grow: 1;
+        }
+        
+        button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 12px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: var(--primary-dark);
+        }
+        
         table {
             width: 100%;
             border-collapse: collapse;
             margin-top: 20px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            border-radius: 4px;
+            overflow: hidden;
         }
+        
         th, td {
-            border: 1px solid #ddd;
-            padding: 8px;
+            padding: 12px 15px;
             text-align: center;
         }
+        
         th {
-            background-color: #f2f2f2;
+            background-color: var(--primary-color);
+            color: white;
+            font-weight: 500;
         }
+        
+        tr:nth-child(even) {
+            background-color: rgba(0, 0, 0, 0.02);
+        }
+        
+        td {
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .vote-count {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        
+        .vote-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 3px 8px;
+            border-radius: 3px;
+        }
+        
         .yes {
-            background-color: #d4edda;
+            background-color: rgba(52, 168, 83, 0.15);
         }
+        
         .no {
-            background-color: #f8d7da;
+            background-color: rgba(234, 67, 53, 0.15);
         }
+        
         .maybe {
-            background-color: #fff3cd;
+            background-color: rgba(251, 188, 5, 0.15);
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+                margin: 20px;
+            }
+            
+            .time-slot-form {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            input[type="date"], input[type="time"] {
+                width: 100%;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Admin Poll</h1>
-        <p>Share this link with participants: <span id="userLink"></span></p>
+        <h1>Admin Poll Dashboard</h1>
+        
+        <div class="share-link">
+            <span id="userLink"></span>
+            <button class="copy-btn" onclick="copyToClipboard()">Copy Link</button>
+        </div>
         
         <div id="addTimeSlot">
             <h2>Add Time Slot</h2>
-            <input type="date" id="dateInput">
-            <input type="time" id="timeInput">
-            <button onclick="addTimeSlot()">Add Time Slot</button>
+            <div class="time-slot-form">
+                <input type="date" id="dateInput" placeholder="Select date">
+                <input type="time" id="timeInput" placeholder="Select time">
+                <button onclick="addTimeSlot()">Add Time Slot</button>
+            </div>
         </div>
         
         <div id="results">
@@ -127,13 +276,25 @@
             }
         }
         
+        // Copy link to clipboard
+        function copyToClipboard() {
+            const linkText = document.getElementById('userLink').textContent;
+            navigator.clipboard.writeText(linkText).then(() => {
+                const copyBtn = document.querySelector('.copy-btn');
+                copyBtn.textContent = 'Copied!';
+                setTimeout(() => {
+                    copyBtn.textContent = 'Copy Link';
+                }, 2000);
+            });
+        }
+        
         // Display results
         function displayResults() {
             const resultsTable = document.getElementById('resultsTable');
             const dates = Object.keys(pollData.dates || {});
             
             if (dates.length === 0) {
-                resultsTable.innerHTML = '<p>No time slots added yet.</p>';
+                resultsTable.innerHTML = '<p>No time slots added yet. Use the form above to add date and time options.</p>';
                 return;
             }
             
@@ -165,9 +326,20 @@
                     if (pollData.dates[date][time]) {
                         const votes = pollData.dates[date][time];
                         tableRows += `<td>
-                            <div>Yes: ${votes.yes}</div>
-                            <div>No: ${votes.no}</div>
-                            <div>Maybe: ${votes.maybe}</div>
+                            <div class="vote-count">
+                                <div class="vote-item yes">
+                                    <span>Yes</span>
+                                    <strong>${votes.yes}</strong>
+                                </div>
+                                <div class="vote-item no">
+                                    <span>No</span>
+                                    <strong>${votes.no}</strong>
+                                </div>
+                                <div class="vote-item maybe">
+                                    <span>Maybe</span>
+                                    <strong>${votes.maybe}</strong>
+                                </div>
+                            </div>
                         </td>`;
                     } else {
                         tableRows += '<td>-</td>';

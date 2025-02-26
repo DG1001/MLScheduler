@@ -1,10 +1,13 @@
 from flask import Flask, render_template, request, jsonify, redirect, url_for
 import uuid
+import secrets
 
 app = Flask(__name__)
 
 # Data structure to store polls
 polls = {}
+# Map admin tokens to poll IDs for security
+admin_tokens = {}
 
 @app.route('/')
 def index():
@@ -13,15 +16,22 @@ def index():
 @app.route('/create_poll', methods=['POST'])
 def create_poll():
     poll_id = str(uuid.uuid4())
-    admin_link = url_for('admin_poll', poll_id=poll_id)
+    # Generate a secure admin token that can't be guessed
+    admin_token = secrets.token_urlsafe(16)
+    admin_tokens[admin_token] = poll_id
+    
+    admin_link = url_for('admin_poll', token=admin_token)
     user_link = url_for('user_poll', poll_id=poll_id)
+    
     polls[poll_id] = {'dates': {}, 'admin_link': admin_link, 'user_link': user_link}
     return jsonify(admin_link=admin_link, user_link=user_link)
 
-@app.route('/admin/<poll_id>', methods=['GET', 'POST'])
-def admin_poll(poll_id):
-    if poll_id not in polls:
+@app.route('/admin/<token>', methods=['GET', 'POST'])
+def admin_poll(token):
+    if token not in admin_tokens:
         return redirect(url_for('index'))
+    
+    poll_id = admin_tokens[token]
         
     if request.method == 'POST':
         data = request.get_json()
