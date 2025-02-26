@@ -52,7 +52,8 @@ def user_poll(poll_id):
         time = data.get('time')
         vote = data.get('vote')
         if date in polls[poll_id]['dates'] and time in polls[poll_id]['dates'][date]:
-            polls[poll_id]['dates'][date][time][vote] += 1
+            vote_key = vote.lower()  # Convert to lowercase to match our data structure
+            polls[poll_id]['dates'][date][time][vote_key] += 1
             return jsonify(success=True, message="Vote recorded successfully!")
         else:
             return jsonify(success=False, message="Invalid date or time"), 400

@@ -42,18 +42,51 @@
             font-weight: bold;
             margin-top: 10px;
         }
+        .submit-button {
+            background-color: #4285f4;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 12px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: background-color 0.3s;
+        }
+        .submit-button:hover {
+            background-color: #3367d6;
+        }
+        .hidden {
+            display: none;
+        }
+        .thank-you {
+            margin-top: 30px;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Vote on Poll</h1>
-        <div id="pollTable"></div>
-        <div id="message" class="success-message"></div>
+        <div id="votingSection">
+            <div id="pollTable"></div>
+            <button id="submitButton" class="submit-button" onclick="submitAllVotes()">Submit Votes</button>
+            <div id="message" class="success-message"></div>
+        </div>
+        <div id="thankYouSection" class="hidden">
+            <div class="thank-you">
+                <h2>Thank you for your votes!</h2>
+                <p>Your responses have been recorded successfully.</p>
+                <h3>Your selections:</h3>
+                <div id="userSelections"></div>
+            </div>
+        </div>
     </div>
     
     <script>
         const pollId = window.location.pathname.split('/').pop();
         let pollData = {};
+        let userVotes = {};
         
         // Fetch poll data
         async function fetchPollData() {
@@ -71,26 +104,85 @@
             }
         }
         
-        // Submit vote
-        async function submitVote(date, time, vote) {
-            const response = await fetch(`/user/${pollId}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ date, time, vote })
+        // Store vote in memory
+        function storeVote(date, time, vote) {
+            if (!userVotes[date]) {
+                userVotes[date] = {};
+            }
+            userVotes[date][time] = vote;
+            
+            // Show visual feedback
+            const radioButtons = document.getElementsByName(`vote-${date}-${time}`);
+            radioButtons.forEach(radio => {
+                const label = radio.parentElement;
+                label.style.fontWeight = radio.checked ? 'bold' : 'normal';
             });
             
-            const result = await response.json();
-            if (result.success) {
-                document.getElementById('message').textContent = result.message;
-                setTimeout(() => {
-                    document.getElementById('message').textContent = '';
-                }, 3000);
-                fetchPollData();
-            } else {
-                alert(result.message);
+            // Enable submit button if at least one vote is made
+            document.getElementById('submitButton').disabled = Object.keys(userVotes).length === 0;
+        }
+        
+        // Submit all votes at once
+        async function submitAllVotes() {
+            if (Object.keys(userVotes).length === 0) {
+                alert('Please select at least one option before submitting.');
+                return;
             }
+            
+            try {
+                // Submit each vote
+                for (const date in userVotes) {
+                    for (const time in userVotes[date]) {
+                        const vote = userVotes[date][time];
+                        
+                        const response = await fetch(`/user/${pollId}`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({ date, time, vote })
+                        });
+                        
+                        const result = await response.json();
+                        if (!result.success) {
+                            throw new Error(result.message);
+                        }
+                    }
+                }
+                
+                // Show thank you section
+                document.getElementById('votingSection').classList.add('hidden');
+                document.getElementById('thankYouSection').classList.remove('hidden');
+                
+                // Display user selections
+                displayUserSelections();
+                
+            } catch (error) {
+                alert('Error submitting votes: ' + error.message);
+            }
+        }
+        
+        // Display user selections in the thank you page
+        function displayUserSelections() {
+            const selectionsDiv = document.getElementById('userSelections');
+            let html = '<table><tr><th>Date</th><th>Time</th><th>Your Vote</th></tr>';
+            
+            for (const date in userVotes) {
+                for (const time in userVotes[date]) {
+                    const vote = userVotes[date][time];
+                    const formattedDate = new Date(date).toLocaleDateString();
+                    const formattedTime = new Date(`2000-01-01T${time}`).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                    
+                    html += `<tr>
+                        <td>${formattedDate}</td>
+                        <td>${formattedTime}</td>
+                        <td class="${vote.toLowerCase()}">${vote}</td>
+                    </tr>`;
+                }
+            }
+            
+            html += '</table>';
+            selectionsDiv.innerHTML = html;
         }
         
         // Display poll table
@@ -132,15 +224,15 @@
                         tableRows += `<td>
                             <div class="vote-option">
                                 <label>
-                                    <input type="radio" name="vote-${date}-${time}" onchange="submitVote('${date}', '${time}', 'yes')">
+                                    <input type="radio" name="vote-${date}-${time}" onchange="storeVote('${date}', '${time}', 'Yes')">
                                     Yes
                                 </label>
                                 <label>
-                                    <input type="radio" name="vote-${date}-${time}" onchange="submitVote('${date}', '${time}', 'no')">
+                                    <input type="radio" name="vote-${date}-${time}" onchange="storeVote('${date}', '${time}', 'No')">
                                     No
                                 </label>
                                 <label>
-                                    <input type="radio" name="vote-${date}-${time}" onchange="submitVote('${date}', '${time}', 'maybe')">
+                                    <input type="radio" name="vote-${date}-${time}" onchange="storeVote('${date}', '${time}', 'Maybe')">
                                     Maybe
                                 </label>
                             </div>
@@ -158,6 +250,9 @@
         
         // Initial load
         fetchPollData();
+        
+        // Initialize submit button as disabled
+        document.getElementById('submitButton').disabled = true;
     </script>
 </body>
 </html>
