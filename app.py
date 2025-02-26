@@ -105,9 +105,22 @@ def user_poll(poll_id):
         date = data.get('date')
         time = data.get('time')
         vote = data.get('vote')
+        name = data.get('name')
+        if not name:
+            return jsonify(success=False, message="Name is required"), 400
+            
         if date in polls[poll_id]['dates'] and time in polls[poll_id]['dates'][date]:
             vote_key = vote.lower()  # Convert to lowercase to match our data structure
             polls[poll_id]['dates'][date][time][vote_key] += 1
+            
+            # Add voter to the list
+            if 'voters' not in polls[poll_id]['dates'][date][time]:
+                polls[poll_id]['dates'][date][time]['voters'] = []
+                
+            polls[poll_id]['dates'][date][time]['voters'].append({
+                'name': name,
+                'vote': vote
+            })
             
             # Save data after recording a vote
             save_data()

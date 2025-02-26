@@ -184,6 +184,10 @@
     <div class="container">
         <h1>Find a slot with MeiLuft</h1>
         <div id="votingSection">
+            <div class="name-input-container" style="margin-bottom: 20px;">
+                <label for="participantName" style="display: block; margin-bottom: 8px; font-weight: bold;">Your Name:</label>
+                <input type="text" id="participantName" placeholder="Enter your name" style="width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 4px; font-size: 16px;">
+            </div>
             <div id="pollTable"></div>
             <button id="submitButton" class="submit-button" onclick="submitAllVotes()">Submit Votes</button>
             <div id="message" class="success-message"></div>
@@ -202,6 +206,7 @@
         const pollId = window.location.pathname.split('/').pop();
         let pollData = {};
         let userVotes = {};
+        let participantName = "";
         
         // Fetch poll data
         async function fetchPollData() {
@@ -239,6 +244,14 @@
         
         // Submit all votes at once
         async function submitAllVotes() {
+            participantName = document.getElementById('participantName').value.trim();
+            
+            if (!participantName) {
+                alert('Please enter your name before submitting.');
+                document.getElementById('participantName').focus();
+                return;
+            }
+            
             if (Object.keys(userVotes).length === 0) {
                 alert('Please select at least one option before submitting.');
                 return;
@@ -255,7 +268,7 @@
                             headers: {
                                 'Content-Type': 'application/json'
                             },
-                            body: JSON.stringify({ date, time, vote })
+                            body: JSON.stringify({ date, time, vote, name: participantName })
                         });
                         
                         const result = await response.json();
@@ -280,7 +293,8 @@
         // Display user selections in the thank you page
         function displayUserSelections() {
             const selectionsDiv = document.getElementById('userSelections');
-            let html = '<table><tr><th>Date</th><th>Time</th><th>Your Vote</th></tr>';
+            let html = `<p>Participant: <strong>${participantName}</strong></p>`;
+            html += '<table><tr><th>Date</th><th>Time</th><th>Your Vote</th></tr>';
             
             for (const date in userVotes) {
                 for (const time in userVotes[date]) {

@@ -155,6 +155,19 @@
             border-radius: 3px;
         }
         
+        .voters-list {
+            margin-top: 8px;
+            font-size: 12px;
+            border-top: 1px solid var(--border-color);
+            padding-top: 5px;
+        }
+        
+        .voter {
+            padding: 2px 5px;
+            margin: 2px 0;
+            border-radius: 3px;
+        }
+        
         .yes {
             background-color: rgba(52, 168, 83, 0.15);
         }
@@ -398,6 +411,17 @@
                 sortedTimes.forEach(time => {
                     if (pollData.dates[date][time]) {
                         const votes = pollData.dates[date][time];
+                        let votersHtml = '';
+                        
+                        if (votes.voters && votes.voters.length > 0) {
+                            votersHtml = '<div class="voters-list">';
+                            votes.voters.forEach(voter => {
+                                const voteClass = voter.vote.toLowerCase();
+                                votersHtml += `<div class="voter ${voteClass}">${voter.name}: ${voter.vote}</div>`;
+                            });
+                            votersHtml += '</div>';
+                        }
+                        
                         tableRows += `<td>
                             <div class="vote-count">
                                 <div class="vote-item yes">
@@ -412,6 +436,7 @@
                                     <span>Maybe</span>
                                     <strong>${votes.maybe}</strong>
                                 </div>
+                                ${votersHtml}
                             </div>
                         </td>`;
                     } else {
