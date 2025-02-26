@@ -197,7 +197,7 @@
             <h2>Add Time Slot</h2>
             <div class="time-slot-form">
                 <input type="date" id="dateInput" placeholder="Select date">
-                <input type="time" id="timeInput" placeholder="Select time" step="900">
+                <input type="time" id="timeInput" placeholder="Select time" step="900" onchange="validateQuarterHour(this)">
                 <button onclick="addTimeSlot()">Add Time Slot</button>
             </div>
         </div>
@@ -235,6 +235,13 @@
             
             if (!date || !time) {
                 alert('Please select both date and time');
+                return;
+            }
+            
+            // Validate that time is on a quarter hour (00, 15, 30, 45)
+            const timeMinutes = time.split(':')[1];
+            if (!['00', '15', '30', '45'].includes(timeMinutes)) {
+                alert('Please select a time on the quarter hour (00, 15, 30, or 45 minutes past the hour)');
                 return;
             }
             
@@ -350,6 +357,26 @@
             });
             
             resultsTable.innerHTML = `<table>${tableHeader}${tableRows}</table>`;
+        }
+        
+        // Validate time is on quarter hour
+        function validateQuarterHour(input) {
+            if (input.value) {
+                const timeMinutes = input.value.split(':')[1];
+                if (!['00', '15', '30', '45'].includes(timeMinutes)) {
+                    // Round to nearest quarter hour
+                    const timeHour = input.value.split(':')[0];
+                    const minutes = parseInt(timeMinutes);
+                    let roundedMinutes;
+                    
+                    if (minutes < 8) roundedMinutes = '00';
+                    else if (minutes < 23) roundedMinutes = '15';
+                    else if (minutes < 38) roundedMinutes = '30';
+                    else roundedMinutes = '45';
+                    
+                    input.value = `${timeHour}:${roundedMinutes}`;
+                }
+            }
         }
         
         // Initial load
