@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vote on Poll - Doodle Clone</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .vote-option {
+            display: flex;
+            flex-direction: column;
+        }
+        .vote-option label {
+            margin: 3px 0;
+        }
+        button {
+            margin: 5px 0;
+            padding: 10px;
+        }
+        .success-message {
+            color: green;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Vote on Poll</h1>
+        <div id="pollTable"></div>
+        <div id="message" class="success-message"></div>
+    </div>
+    
+    <script>
+        const pollId = window.location.pathname.split('/').pop();
+        let pollData = {};
+        
+        // Fetch poll data
+        async function fetchPollData() {
+            const response = await fetch(`/user/${pollId}`);
+            pollData = await response.json();
+            displayPollTable();
+        }
+        
+        // Submit vote
+        async function submitVote(date, time, vote) {
+            const response = await fetch(`/user/${pollId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ date, time, vote })
+            });
+            
+            const result = await response.json();
+            if (result.success) {
+                document.getElementById('message').textContent = result.message;
+                setTimeout(() => {
+                    document.getElementById('message').textContent = '';
+                }, 3000);
+                fetchPollData();
+            } else {
+                alert(result.message);
+            }
+        }
+        
+        // Display poll table
+        function displayPollTable() {
+            const pollTable = document.getElementById('pollTable');
+            const dates = Object.keys(pollData.dates);
+            
+            if (dates.length === 0) {
+                pollTable.innerHTML = '<p>No time slots available for voting.</p>';
+                return;
+            }
+            
+            // Create table header with dates and times
+            const allTimes = new Set();
+            dates.forEach(date => {
+                Object.keys(pollData.dates[date]).forEach(time => {
+                    allTimes.add(time);
+                });
+            });
+            
+            const sortedTimes = Array.from(allTimes).sort();
+            
+            // Create table rows
+            let tableRows = '';
+            dates.sort().forEach(date => {
+                const formattedDate = new Date(date).toLocaleDateString();
+                tableRows += `<tr><td>${formattedDate}</td>`;
+                
+                sortedTimes.forEach(time => {
+                    if (pollData.dates[date][time]) {
+                        tableRows += `<td>
+                            <div class="vote-option">
+                                <label>
+                                    <input type="radio" name="vote-${date}-${time}" onchange="submitVote('${date}', '${time}', 'yes')">
+                                    Yes
+                                </label>
+                                <label>
+                                    <input type="radio" name="vote-${date}-${time}" onchange="submitVote('${date}', '${time}', 'no')">
+                                    No
+                                </label>
+                                <label>
+                                    <input type="radio" name="vote-${date}-${time}" onchange="submitVote('${date}', '${time}', 'maybe')">
+                                    Maybe
+                                </label>
+                            </div>
+                        </td>`;
+                    } else {
+                        tableRows += '<td>-</td>';
+                    }
+                });
+                
+                tableRows += '</tr>';
+            });
+            
+            // Create table header
+            let tableHeader = '<tr><th>Date</th>';
+            sortedTimes.forEach(time => {
+                const formattedTime = new Date(`2000-01-01T${time}`).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                tableHeader += `<th>${formattedTime}</th>`;
+            });
+            tableHeader += '</tr>';
+            
+            pollTable.innerHTML = `<table>${tableHeader}${tableRows}</table>`;
+        }
+        
+        // Initial load
+        fetchPollData();
+    </script>
+</body>
+</html>

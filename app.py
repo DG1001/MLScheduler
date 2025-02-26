@@ -20,6 +20,9 @@ def create_poll():
 
 @app.route('/admin/<poll_id>', methods=['GET', 'POST'])
 def admin_poll(poll_id):
+    if poll_id not in polls:
+        return redirect(url_for('index'))
+        
     if request.method == 'POST':
         data = request.get_json()
         date = data.get('date')
@@ -31,10 +34,16 @@ def admin_poll(poll_id):
             return jsonify(success=True, message="Time slot added successfully!")
         else:
             return jsonify(success=False, message="Invalid input"), 400
-    return jsonify(polls[poll_id])
+    
+    if request.headers.get('Content-Type') == 'application/json':
+        return jsonify(polls[poll_id])
+    return render_template('admin_poll.html')
 
 @app.route('/user/<poll_id>', methods=['GET', 'POST'])
 def user_poll(poll_id):
+    if poll_id not in polls:
+        return redirect(url_for('index'))
+        
     if request.method == 'POST':
         data = request.get_json()
         date = data.get('date')
@@ -45,7 +54,10 @@ def user_poll(poll_id):
             return jsonify(success=True, message="Vote recorded successfully!")
         else:
             return jsonify(success=False, message="Invalid date or time"), 400
-    return jsonify(polls[poll_id])
+    
+    if request.headers.get('Content-Type') == 'application/json':
+        return jsonify(polls[poll_id])
+    return render_template('user_poll.html')
 
 if __name__ == '__main__':
     app.run(debug=True)

@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Poll - Doodle Clone</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        input, button, select {
+            margin: 5px 0;
+            padding: 10px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .yes {
+            background-color: #d4edda;
+        }
+        .no {
+            background-color: #f8d7da;
+        }
+        .maybe {
+            background-color: #fff3cd;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Admin Poll</h1>
+        <p>Share this link with participants: <span id="userLink"></span></p>
+        
+        <div id="addTimeSlot">
+            <h2>Add Time Slot</h2>
+            <input type="date" id="dateInput">
+            <input type="time" id="timeInput">
+            <button onclick="addTimeSlot()">Add Time Slot</button>
+        </div>
+        
+        <div id="results">
+            <h2>Results</h2>
+            <div id="resultsTable"></div>
+        </div>
+    </div>
+    
+    <script>
+        const pollId = window.location.pathname.split('/').pop();
+        let pollData = {};
+        
+        // Fetch poll data
+        async function fetchPollData() {
+            const response = await fetch(`/admin/${pollId}`);
+            pollData = await response.json();
+            displayResults();
+            document.getElementById('userLink').textContent = pollData.user_link;
+        }
+        
+        // Add time slot
+        async function addTimeSlot() {
+            const date = document.getElementById('dateInput').value;
+            const time = document.getElementById('timeInput').value;
+            
+            if (!date || !time) {
+                alert('Please select both date and time');
+                return;
+            }
+            
+            const response = await fetch(`/admin/${pollId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ date, time })
+            });
+            
+            const result = await response.json();
+            if (result.success) {
+                fetchPollData();
+            } else {
+                alert(result.message);
+            }
+        }
+        
+        // Display results
+        function displayResults() {
+            const resultsTable = document.getElementById('resultsTable');
+            const dates = Object.keys(pollData.dates);
+            
+            if (dates.length === 0) {
+                resultsTable.innerHTML = '<p>No time slots added yet.</p>';
+                return;
+            }
+            
+            let tableHTML = '<table><tr><th>Date/Time</th>';
+            
+            // Create table header with dates and times
+            const allTimes = new Set();
+            dates.forEach(date => {
+                Object.keys(pollData.dates[date]).forEach(time => {
+                    allTimes.add(time);
+                });
+            });
+            
+            const sortedTimes = Array.from(allTimes).sort();
+            
+            // Create table rows
+            let tableRows = '';
+            dates.sort().forEach(date => {
+                const formattedDate = new Date(date).toLocaleDateString();
+                tableRows += `<tr><td>${formattedDate}</td>`;
+                
+                sortedTimes.forEach(time => {
+                    if (pollData.dates[date][time]) {
+                        const votes = pollData.dates[date][time];
+                        tableRows += `<td>
+                            <div>Yes: ${votes.yes}</div>
+                            <div>No: ${votes.no}</div>
+                            <div>Maybe: ${votes.maybe}</div>
+                        </td>`;
+                    } else {
+                        tableRows += '<td>-</td>';
+                    }
+                });
+                
+                tableRows += '</tr>';
+            });
+            
+            // Create table header
+            let tableHeader = '<tr><th>Date</th>';
+            sortedTimes.forEach(time => {
+                const formattedTime = new Date(`2000-01-01T${time}`).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                tableHeader += `<th>${formattedTime}</th>`;
+            });
+            tableHeader += '</tr>';
+            
+            resultsTable.innerHTML = `<table>${tableHeader}${tableRows}</table>`;
+        }
+        
+        // Initial load
+        fetchPollData();
+    </script>
+</body>
+</html>
