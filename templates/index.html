@@ -5,48 +5,76 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Doodle Clone</title>
     <style>
-        canvas {
-            border: 1px solid black;
+        body {
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        input, button {
+            margin: 5px 0;
+            padding: 10px;
+            width: 100%;
         }
     </style>
 </head>
 <body>
-    <canvas id="drawingCanvas" width="800" height="600"></canvas>
+    <div class="container">
+        <h1>Schedule a Meeting</h1>
+        <input type="date" id="date" placeholder="Date">
+        <input type="time" id="time" placeholder="Time">
+        <input type="text" id="user" placeholder="Your Name">
+        <button onclick="scheduleMeeting()">Schedule Meeting</button>
+        <h2>Meeting Schedule</h2>
+        <div id="schedule"></div>
+    </div>
     <script>
-        const canvas = document.getElementById('drawingCanvas');
-        const ctx = canvas.getContext('2d');
-        let isDrawing = false;
+        async function scheduleMeeting() {
+            const date = document.getElementById('date').value;
+            const time = document.getElementById('time').value;
+            const user = document.getElementById('user').value;
 
-        canvas.addEventListener('mousedown', (e) => {
-            isDrawing = true;
-            draw(e);
-        });
-
-        canvas.addEventListener('mousemove', (e) => {
-            if (isDrawing) draw(e);
-        });
-
-        canvas.addEventListener('mouseup', () => isDrawing = false);
-        canvas.addEventListener('mouseout', () => isDrawing = false);
-
-        function draw(e) {
-            const rect = canvas.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
-
-            ctx.beginPath();
-            ctx.arc(x, y, 2, 0, 2 * Math.PI);
-            ctx.fill();
-
-            // Send drawing data to server
-            fetch('/draw', {
+            const response = await fetch('/schedule', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ x, y })
+                body: JSON.stringify({ date, time, user })
             });
+
+            const result = await response.json();
+            if (result.success) {
+                alert(result.message);
+                loadSchedule();
+            } else {
+                alert(result.message);
+            }
         }
+
+        async function loadSchedule() {
+            const response = await fetch('/get_schedule');
+            const schedule = await response.json();
+
+            const scheduleDiv = document.getElementById('schedule');
+            scheduleDiv.innerHTML = '';
+
+            for (const date in schedule) {
+                const dateDiv = document.createElement('div');
+                dateDiv.innerHTML = `<strong>${date}</strong>`;
+                scheduleDiv.appendChild(dateDiv);
+
+                schedule[date].forEach(meeting => {
+                    const meetingDiv = document.createElement('div');
+                    meetingDiv.innerHTML = `${meeting.time} - ${meeting.user}`;
+                    scheduleDiv.appendChild(meetingDiv);
+                });
+            }
+        }
+
+        // Load the schedule on page load
+        window.onload = loadSchedule;
     </script>
 </body>
 </html>
