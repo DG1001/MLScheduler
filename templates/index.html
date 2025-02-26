@@ -22,59 +22,23 @@
 </head>
 <body>
     <div class="container">
-        <h1>Schedule a Meeting</h1>
-        <input type="date" id="date" placeholder="Date">
-        <input type="time" id="time" placeholder="Time">
-        <input type="text" id="user" placeholder="Your Name">
-        <button onclick="scheduleMeeting()">Schedule Meeting</button>
-        <h2>Meeting Schedule</h2>
-        <div id="schedule"></div>
+        <h1>Create a New Scheduling Request</h1>
+        <button onclick="createPoll()">Create New Poll</button>
+        <div id="links"></div>
     </div>
     <script>
-        async function scheduleMeeting() {
-            const date = document.getElementById('date').value;
-            const time = document.getElementById('time').value;
-            const user = document.getElementById('user').value;
-
-            const response = await fetch('/schedule', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ date, time, user })
+        async function createPoll() {
+            const response = await fetch('/create_poll', {
+                method: 'POST'
             });
 
             const result = await response.json();
-            if (result.success) {
-                alert(result.message);
-                loadSchedule();
-            } else {
-                alert(result.message);
-            }
+            const linksDiv = document.getElementById('links');
+            linksDiv.innerHTML = `
+                <p>Admin Link: <a href="${result.admin_link}" target="_blank">${result.admin_link}</a></p>
+                <p>User Link: <a href="${result.user_link}" target="_blank">${result.user_link}</a></p>
+            `;
         }
-
-        async function loadSchedule() {
-            const response = await fetch('/get_schedule');
-            const schedule = await response.json();
-
-            const scheduleDiv = document.getElementById('schedule');
-            scheduleDiv.innerHTML = '';
-
-            for (const date in schedule) {
-                const dateDiv = document.createElement('div');
-                dateDiv.innerHTML = `<strong>${date}</strong>`;
-                scheduleDiv.appendChild(dateDiv);
-
-                schedule[date].forEach(meeting => {
-                    const meetingDiv = document.createElement('div');
-                    meetingDiv.innerHTML = `${meeting.time} - ${meeting.user}`;
-                    scheduleDiv.appendChild(meetingDiv);
-                });
-            }
-        }
-
-        // Load the schedule on page load
-        window.onload = loadSchedule;
     </script>
 </body>
 </html>
