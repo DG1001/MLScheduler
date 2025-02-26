@@ -3,8 +3,6 @@ import uuid
 import secrets
 import json
 import os
-import atexit
-
 app = Flask(__name__)
 
 # File to store polls data
@@ -39,11 +37,13 @@ def save_data():
     except Exception as e:
         print(f"Error saving data: {e}")
 
-# Register save_data to run when the application exits
-atexit.register(save_data)
-
 # Load data at startup
 load_data()
+
+# Register a function to save data when the app shuts down
+@app.teardown_appcontext
+def save_on_shutdown(exception=None):
+    save_data()
 
 @app.route('/')
 def index():
@@ -119,6 +119,11 @@ def user_poll(poll_id):
     if request.headers.get('Content-Type') == 'application/json' or request.headers.get('Accept') == 'application/json':
         return jsonify(polls[poll_id])
     return render_template('user_poll.html')
+
+@app.route('/save', methods=['GET'])
+def manual_save():
+    save_data()
+    return jsonify(success=True, message="Data saved successfully!")
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=8080)
