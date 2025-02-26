@@ -28,6 +28,8 @@ def admin_poll(poll_id):
         date = data.get('date')
         time = data.get('time')
         if date and time:
+            if 'dates' not in polls[poll_id]:
+                polls[poll_id]['dates'] = {}
             if date not in polls[poll_id]['dates']:
                 polls[poll_id]['dates'][date] = {}
             polls[poll_id]['dates'][date][time] = {'yes': 0, 'no': 0, 'maybe': 0}

@@ -57,9 +57,18 @@
         
         // Fetch poll data
         async function fetchPollData() {
-            const response = await fetch(`/user/${pollId}`);
-            pollData = await response.json();
-            displayPollTable();
+            try {
+                const response = await fetch(`/user/${pollId}`, {
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+                pollData = await response.json();
+                displayPollTable();
+            } catch (error) {
+                console.error("Error fetching poll data:", error);
+                document.getElementById('pollTable').innerHTML = '<p>Error loading poll data. Please refresh the page.</p>';
+            }
         }
         
         // Submit vote

@@ -65,10 +65,18 @@
         
         // Fetch poll data
         async function fetchPollData() {
-            const response = await fetch(`/admin/${pollId}`);
-            pollData = await response.json();
-            displayResults();
-            document.getElementById('userLink').textContent = window.location.origin + pollData.user_link;
+            try {
+                const response = await fetch(`/admin/${pollId}`, {
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+                pollData = await response.json();
+                displayResults();
+                document.getElementById('userLink').textContent = window.location.origin + pollData.user_link;
+            } catch (error) {
+                console.error("Error fetching poll data:", error);
+            }
         }
         
         // Add time slot
@@ -81,24 +89,41 @@
                 return;
             }
             
-            const response = await fetch(`/admin/${pollId}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ date, time })
-            });
-            
-            const result = await response.json();
-            if (result.success) {
-                // Clear the inputs
-                document.getElementById('dateInput').value = '';
-                document.getElementById('timeInput').value = '';
+            try {
+                const response = await fetch(`/admin/${pollId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ date, time })
+                });
                 
-                // Refresh the data
-                fetchPollData();
-            } else {
-                alert(result.message);
+                const result = await response.json();
+                if (result.success) {
+                    // Clear the inputs
+                    document.getElementById('dateInput').value = '';
+                    document.getElementById('timeInput').value = '';
+                    
+                    // Update the local data structure before refreshing the UI
+                    if (!pollData.dates) {
+                        pollData.dates = {};
+                    }
+                    if (!pollData.dates[date]) {
+                        pollData.dates[date] = {};
+                    }
+                    pollData.dates[date][time] = { yes: 0, no: 0, maybe: 0 };
+                    
+                    // Display the updated results
+                    displayResults();
+                    
+                    // Also fetch fresh data from server
+                    fetchPollData();
+                } else {
+                    alert(result.message);
+                }
+            } catch (error) {
+                console.error("Error adding time slot:", error);
+                alert("Failed to add time slot. Please try again.");
             }
         }
         
