@@ -68,7 +68,7 @@
             const response = await fetch(`/admin/${pollId}`);
             pollData = await response.json();
             displayResults();
-            document.getElementById('userLink').textContent = pollData.user_link;
+            document.getElementById('userLink').textContent = window.location.origin + pollData.user_link;
         }
         
         // Add time slot
@@ -91,6 +91,11 @@
             
             const result = await response.json();
             if (result.success) {
+                // Clear the inputs
+                document.getElementById('dateInput').value = '';
+                document.getElementById('timeInput').value = '';
+                
+                // Refresh the data
                 fetchPollData();
             } else {
                 alert(result.message);
@@ -100,7 +105,7 @@
         // Display results
         function displayResults() {
             const resultsTable = document.getElementById('resultsTable');
-            const dates = Object.keys(pollData.dates);
+            const dates = Object.keys(pollData.dates || {});
             
             if (dates.length === 0) {
                 resultsTable.innerHTML = '<p>No time slots added yet.</p>';

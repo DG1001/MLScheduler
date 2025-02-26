@@ -87,7 +87,7 @@
         // Display poll table
         function displayPollTable() {
             const pollTable = document.getElementById('pollTable');
-            const dates = Object.keys(pollData.dates);
+            const dates = Object.keys(pollData.dates || {});
             
             if (dates.length === 0) {
                 pollTable.innerHTML = '<p>No time slots available for voting.</p>';

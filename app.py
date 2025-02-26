@@ -13,8 +13,8 @@ def index():
 @app.route('/create_poll', methods=['POST'])
 def create_poll():
     poll_id = str(uuid.uuid4())
-    admin_link = url_for('admin_poll', poll_id=poll_id, _external=True)
-    user_link = url_for('user_poll', poll_id=poll_id, _external=True)
+    admin_link = url_for('admin_poll', poll_id=poll_id)
+    user_link = url_for('user_poll', poll_id=poll_id)
     polls[poll_id] = {'dates': {}, 'admin_link': admin_link, 'user_link': user_link}
     return jsonify(admin_link=admin_link, user_link=user_link)
 
@@ -60,4 +60,4 @@ def user_poll(poll_id):
     return render_template('user_poll.html')
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, host='0.0.0.0', port=8080)

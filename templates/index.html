@@ -84,9 +84,9 @@
                 const linksDiv = document.getElementById('links');
                 linksDiv.innerHTML = `
                     <p><strong>Admin Link</strong> (to create and manage the poll):</p>
-                    <p><a href="${result.admin_link}" target="_blank">${result.admin_link}</a></p>
+                    <p><a href="${result.admin_link}" target="_blank">${window.location.origin}${result.admin_link}</a></p>
                     <p><strong>User Link</strong> (to share with participants):</p>
-                    <p><a href="${result.user_link}" target="_blank">${result.user_link}</a></p>
+                    <p><a href="${result.user_link}" target="_blank">${window.location.origin}${result.user_link}</a></p>
                 `;
                 linksDiv.classList.add('show');
             } catch (error) {
